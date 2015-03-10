@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>clock</title>
+</head>
+<body>
+	<canvas id="canvas"></canvas>
+</body>
+</html>
+<script>
+	var time=new Date();
+	var Clock_Radius=100;
+	var Center_x=100;
+	var Center_y=100;
+	var curtime=gettime();
+
+	var canvas=document.getElementById('canvas')
+	var ctx=canvas.getContext('2d')
+	canvas.width=200;
+	canvas.height=200;
+	
+
+	setInterval(function(){
+		render();
+		update();
+	},1000)
+	function getco(direct,angel,r){
+		if(direct=='x'){
+			return Center_x+Math.cos(angel)*r;
+		}
+		if(direct=='y'){
+			return Center_y+Math.sin(angel)*r;
+		}
+	}
+	function gettime(){
+		time=new Date();
+		h=time.getHours();
+		m=time.getMinutes();
+		s=time.getSeconds();
+		if(h>=12){
+			h-=12;
+		}
+		return {'h':h,'m':m,'s':s}
+	}
+	function render(){
+		ctx.clearRect(0, 0, 200, 200);
+		//钟框
+	ctx.beginPath();
+	ctx.arc(Center_x, Center_y, Clock_Radius, 0, 2*Math.PI);
+	ctx.stroke();
+	//格子
+	for(var i=0;i<61;i++){
+		ctx.beginPath();
+		if(i%5==0){
+			ctx.lineWidth = "3";
+			ctx.moveTo(getco('x',Math.PI/30*i,Clock_Radius),getco('y',Math.PI/30*i,Clock_Radius));
+			ctx.lineTo(getco('x',Math.PI/30*i,Clock_Radius*0.9),getco('y',Math.PI/30*i,Clock_Radius*0.9));
+		}else{
+			ctx.lineWidth = "1";
+			ctx.moveTo(getco('x',Math.PI/30*i,Clock_Radius),getco('y',Math.PI/30*i,Clock_Radius));
+			ctx.lineTo(getco('x',Math.PI/30*i,Clock_Radius*0.95),getco('y',Math.PI/30*i,Clock_Radius*0.95));
+		}
+		ctx.stroke();
+	}
+	//时针
+		var temp=((curtime.h*60*60+curtime.m*60+curtime.s)/(60*60*12)-0.25)*2*Math.PI;
+		ctx.lineWidth = "4";
+		ctx.moveTo(getco('x',temp,Clock_Radius*0.5), getco('y',temp,Clock_Radius*0.5));
+		ctx.lineTo(getco('x',temp,0), getco('y',temp,0));
+		ctx.stroke();
+	//分针
+		ctx.lineWidth = "2";
+		temp=((curtime.m*60+curtime.s)/(60*60)-0.25)*2*Math.PI;
+		ctx.moveTo(getco('x',temp,Clock_Radius*0.7), getco('y',temp,Clock_Radius*0.7));
+		ctx.lineTo(getco('x',temp,0), getco('y',temp,0));
+		ctx.stroke();
+	//秒针
+		ctx.lineWidth = "1";
+		temp=(curtime.s/60-0.25)*2*Math.PI;
+		ctx.moveTo(getco('x',temp,Clock_Radius), getco('y',temp,Clock_Radius));
+		ctx.lineTo(getco('x',temp,0), getco('y',temp,0));
+		ctx.stroke();
+		ctx.save();
+		ctx.rotate(90);
+		ctx.restore();
+	}
+	function update(){
+		curtime=gettime();
+	}
+
+
+
+
+
+
+
+
+
+</script>
+

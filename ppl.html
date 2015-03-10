@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	<canvas id="canvas" width='400' height='600' style='border:1px solid #666'></canvas>
+	<button onclick='play()'>play</button>
+	<button onclick='start()'>start</button>
+</body>
+</html>
+
+<script>
+	var canvas=document.getElementById('canvas')
+	var ctx=canvas.getContext('2d')
+	var speed=0.5;//the speed balls get down
+	var colors=['red','green','pink','yellow','purple'];
+	var balls=[];
+	var shotballs=[];
+	var shotspeed=20;//the speed shotballs move
+	var readys=[colors[Math.floor(Math.random()*colors.length)],colors[Math.floor(Math.random()*colors.length)]];
+	appendball(7,50);
+	canvas.addEventListener('click',shoot);
+	
+	function play(){
+		render();
+		update();
+	}
+	function start(){
+		var gamestart=setInterval(function(){
+		render();
+		update();
+	},20);
+	}
+	function render(){
+		ctx.clearRect(0, 0, 400, 600);
+		ctx.beginPath();
+		ctx.moveTo(0, 450);
+		ctx.lineTo(400, 450);
+		ctx.stroke();
+		drawballs();
+		drawreadys();
+	}
+	function update(){
+		//shotballs和balls的碰撞检测
+		collisiondetect();
+		//判断顶层生成球
+		if(balls[0][0].h>=0){
+			appendball(balls[0].length,balls[0][0].h);
+		}
+		//把所有球下降speed高度
+		for(var i=0;i<balls.length;i++){
+			for(j=0;j<balls[i].length;j++){
+				balls[i][j].h+=speed;
+			}
+		}
+		//消失判定/结束判定
+		if(balls.length>=12){
+			balls.pop();
+		}
+		//shotballs的更新
+		for(var i=0;i<shotballs.length;i++){
+			shotballs[i].x+=shotballs[i].vx;
+			shotballs[i].y+=shotballs[i].vy;
+			if(shotballs[i].x+25>=400){
+				shotballs[i].x=400-25;
+				shotballs[i].vx*=-1;
+			}
+			if(shotballs[i].x-25<=0){
+				shotballs[i].x=25;
+				shotballs[i].vx*=-1;
+			}
+		}
+		
+
+	}
+	function appendball(length,height){
+		var line=[];
+		if(length==7){
+				for(var i=0;i<8;i++){
+				var ball={'c':colors[Math.floor(Math.random()*colors.length)],'h':height-25*Math.sqrt(3),'x':50*i+25};
+				line.push(ball);
+			}
+		}else{
+				for(var i=0;i<7;i++){
+				var ball={'c':colors[Math.floor(Math.random()*colors.length)],'h':height-25*Math.sqrt(3),'x':50*i+50};
+				line.push(ball);
+			}
+		}
+		
+		balls.unshift(line);
+	}
+	function drawballs(){
+		for(var i=0;i<balls.length;i++){
+			if(balls[i].length==8){
+				for(var j=0;j<8;j++){
+					ctx.beginPath();
+					ctx.arc(50*j+25, balls[i][j].h, 25, 0, 2*Math.PI);
+					ctx.fillStyle = balls[i][j].c;
+					ctx.fill();
+				}
+			}else{
+				for(var k=0;k<7;k++){
+					ctx.beginPath();
+					//console.log(balls[i][k])
+					ctx.arc(50*k+50, balls[i][k].h, 25, 0, 2*Math.PI);
+					ctx.fillStyle = balls[i][k].c;
+					ctx.fill();
+				}
+			}
+		}
+		//shotballs
+		for(var i=0;i<shotballs.length;i++){
+			ctx.beginPath();
+			ctx.arc(shotballs[i].x, shotballs[i].y, 25, 0, 2*Math.PI);
+			ctx.fillStyle = shotballs[i].c;
+			ctx.fill();
+		}
+	}
+	function drawreadys(){
+		ctx.beginPath();
+		ctx.arc(200, 500, 25, 0, 2*Math.PI);
+		ctx.fillStyle = readys[0];
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(100, 550 , 17, 0, 2*Math.PI);
+		ctx.fillStyle = readys[1];
+		ctx.fill();
+	}
+	function shoot(e){
+		var x=e.offsetX;
+		var y=e.offsetY;
+		//判断位置
+		if(y>=450){
+			var temp=readys[0];
+			readys[0]=readys[1];
+			readys[1]=temp;
+			return;
+		}
+		//在shotballs里加球
+		var _x=x-200;
+		var _y=y-500;
+		var speedvector=Math.sqrt(_x*_x+_y*_y);
+		var newshotball={'c':readys[0],x:200,y:500,vx:shotspeed/speedvector*_x,vy:shotspeed/speedvector*_y};
+		shotballs.push(newshotball);
+		//ready改变
+		readys[0]=readys[1];
+		readys[1]=colors[Math.floor(Math.random()*colors.length)];
+	}
+	function collisiondetect(){
+		for(var i=0;i<balls.length;i++){
+			for(var j=0;j<shotballs.length;j++){
+				if(balls[i][0].h>=shotballs[j].y-25 && balls[i][0].h<=shotballs[j].y+25){
+					for(var k=0;k<balls[i].length;k++){
+						if(balls[i][k].x>=shotballs[j].x-50 &&balls[i][k].x<=shotballs[j].x+50&&balls[i][k].c!='no'){
+							checkcolor(balls[i][k].x,balls[i][k].h,shotballs[j].x,shotballs[j].y,i,k,j);
+						}
+					}
+				}
+			}
+		}
+	}
+	function checkcolor(ballsx,ballsy,shotx,shoty,ballsline,ballscolumn,shotno){
+		var deletelist=judge(ballsline,ballscolumn,shotballs[shotno].c);
+	}
+	function judge(line,column,color){
+		var list=[];
+		var tmp=[];
+		if(balls[line][column].c==color){
+			list.push([line,column]);
+		}
+		while(tmp=searchsurroundings(list)){
+			list=tmp;
+			searchsurroundings();
+		}
+	}
+	function searchsurroundings(list){//list=[[line,colum],[line,column],....]
+		var flag=0;
+		console.log(list)
+		for(var i=0;i<list.length;i++){
+			var templine=list[i][0];
+			var tempcolumn=list[i][1];
+			for(var j=tempcolumn-1;j<tempcolumn+2;j++){
+				
+			}
+		}
+	}
+	function distance(x,y,_x,_y){
+		return Math.sqrt((x-_x)*(x-_x)+(y-_y)*(y-_y));
+	}
+
+
+</script>

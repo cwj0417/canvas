@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>canvas</title>
+	<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+	<style>
+	.wrap{position:relative;}
+	.controller{position:absolute;background: rgba(255,255,0,.3);width:175px;height:75px;border-radius: 10px;padding:10px;}
+	input{width:125px;}
+	</style>
+</head>
+<body>
+<div class="wrap">
+	<canvas id='canvas'></canvas>
+	<div class="controller">
+		文字:<input type="text" class="text" value='CANVAS电子时钟'><br>
+		聚光灯源: <input type="text" class="x" style='width:40px' value='0'><input type="text" class="y" style='width:40px' value='0'><br>	
+		大小:<select class="r">
+				<option value="1">1</option>
+				<option value="2">2</option>
+				<option value="3">3</option>
+				<option value="4">4</option>
+				<option value="5">5</option>
+				<option value="6" selected>6</option>
+				<option value="7">7</option>
+				<option value="8">8</option>	
+		</select><button class="sub">确定</button><button class="hide">隐藏</button>
+	</div>
+</div>
+	
+</body>
+</html>
+<script src="digit.js"></script>
+<script src="main.js"></script>
+<script>
+	$(function(){
+		$('.controller').css('top',WINDOW_HEIGHT-100);
+		$('.controller').css('left',WINDOW_WIDTH-200);
+		$('.sub').click(function(){
+			RADIUS=parseInt($('.r').val());
+			txt=$('.text').val();
+			SPOTPOS.x=parseInt($('.x').val());
+			SPOTPOS.y=parseInt($('.y').val());
+		})
+		$('.hide').click(function(){
+			$('.controller').hide();
+		})
+	})
+</script>

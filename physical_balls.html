@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>egg play</title>
+	<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+</head>
+<body>
+	<canvas id="canvas" width='400' height='400' style='border:1px solid black;'></canvas>
+	<div>
+		初始x<input type="text" class="x" value='0'>
+		初始y<input type="text" class="y" value='0'>
+		半径<input type="text" class="r" value='10'>
+		初速度x<input type="text" class="vx" value='0'>
+		初速度y<input type="text" class="vy" value='0'>
+		颜色<input type="text" class="color" value='black'>
+		<button class="submit">add an egg</button>
+	</div>
+</body>
+</html>
+<script>
+$(function(){
+	$('.submit').click(function(){
+		var newball={
+			color:$('.color').val(),
+			x:parseInt($('.x').val()),
+			y:parseInt($('.y').val()),
+			r:parseInt($('.r').val()),
+			vx:parseInt($('.vx').val()),
+			vy:parseInt($('.vy').val()),
+			g:1
+		}
+		ball.push(newball);
+	})
+})
+	var canvas=document.getElementById('canvas')
+	var ctx=canvas.getContext('2d')
+	var ball=[{
+		color:'red',
+		x:200,
+		y:200,
+		r:20,
+		vx:2,
+		vy:3,
+		g:1
+	},
+	{
+		color:'green',
+		x:200,
+		y:200,
+		r:20,
+		vx:-2,
+		vy:1,
+		g:1
+	},{
+		color:'blue',
+		x:200,
+		y:200,
+		r:20,
+		vx:7,
+		vy:-7,
+		g:1
+	},{
+		color:'yellow',
+		x:200,
+		y:200,
+		r:20,
+		vx:3,
+		vy:4,
+		g:1
+	}
+	]
+	window.onload=function(){
+		setInterval(function(){
+			draw();
+			update();
+		},50);
+	}
+	function draw(){
+		ctx.clearRect(0, 0, 400, 400);
+		for(var i=0;i<ball.length;i++){
+			ctx.beginPath();
+			ctx.arc(ball[i].x, ball[i].y, ball[i].r, 0, 2*Math.PI);
+			ctx.fillStyle = ball[i].color;
+			ctx.fill();
+		}
+		
+
+	}
+	function update(){
+		for(var i=0;i<ball.length;i++){
+			ball[i].x+=ball[i].vx;
+			ball[i].y+=ball[i].vy;
+			ball[i].vy+=ball[i].g;
+		if(ball[i].y+ball[i].r>=400){//bottom
+			ball[i].y=400-ball[i].r;
+			ball[i].vy=-ball[i].vy*0.95;
+		}
+		if(ball[i].x+ball[i].r>=400){//right
+			ball[i].x=400-ball[i].r;
+			ball[i].vx=-ball[i].vx;
+		}
+		if(ball[i].x-ball[i].r<=0){//left
+			ball[i].x=0+ball[i].r;
+			ball[i].vx=-ball[i].vx;
+		}
+		if(ball[i].y-ball[i].r<0){//top
+			ball[i].y=0+ball[i].r;
+			ball[i].vy=-ball[i].vy;
+		}
+		for(var j=0;j<ball.length;j++){//interballs act
+			if(i!=j){
+				if(((ball[i].x-ball[j].x)*(ball[i].x-ball[j].x)+(ball[i].y-ball[j].y)*(ball[i].y-ball[j].y))<=(ball[i].r+ball[j].r)*(ball[i].r+ball[j].r)){
+					var nx=ball[i].x-ball[j].x;
+					var ny=ball[i].y-ball[j].y;
+					ball[i].vx+=nx;
+					ball[i].vx/=2;
+					ball[i].vy+=ny;
+					ball[i].vy/=2;
+				}
+			}
+		}
+	}//end for
+	}
+</script>
