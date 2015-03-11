@@ -20,7 +20,7 @@
 	var shotballs=[];
 	var shotspeed=20;//the speed shotballs move
 	var readys=[colors[Math.floor(Math.random()*colors.length)],colors[Math.floor(Math.random()*colors.length)]];
-	appendball(7,50);
+	appendnoball(7,0);
 	canvas.addEventListener('click',shoot);
 	
 	function play(){
@@ -91,22 +91,43 @@
 		
 		balls.unshift(line);
 	}
+	function appendnoball(length,height){
+		var line=[];
+		if(length==7){
+				for(var i=0;i<8;i++){
+				var ball={'c':'no','h':height+25*Math.sqrt(3),'x':50*i+25};
+				line.push(ball);
+			}
+		}else{
+				for(var i=0;i<7;i++){
+				var ball={'c':'no','h':height+25*Math.sqrt(3),'x':50*i+50};
+				line.push(ball);
+			}
+		}
+		
+		balls.push(line);
+	}
 	function drawballs(){
 		for(var i=0;i<balls.length;i++){
 			if(balls[i].length==8){
 				for(var j=0;j<8;j++){
-					ctx.beginPath();
+					if(balls[i][j].c!='no'){
+						ctx.beginPath();
 					ctx.arc(50*j+25, balls[i][j].h, 25, 0, 2*Math.PI);
 					ctx.fillStyle = balls[i][j].c;
 					ctx.fill();
+					}
+					
 				}
 			}else{
 				for(var k=0;k<7;k++){
-					ctx.beginPath();
-					//console.log(balls[i][k])
-					ctx.arc(50*k+50, balls[i][k].h, 25, 0, 2*Math.PI);
-					ctx.fillStyle = balls[i][k].c;
-					ctx.fill();
+					if(balls[i][k].c!='no'){
+						ctx.beginPath();
+						ctx.arc(50*k+50, balls[i][k].h, 25, 0, 2*Math.PI);
+						ctx.fillStyle = balls[i][k].c;
+						ctx.fill();
+					}
+					
 				}
 			}
 		}
@@ -149,42 +170,108 @@
 		readys[1]=colors[Math.floor(Math.random()*colors.length)];
 	}
 	function collisiondetect(){
-		for(var i=0;i<balls.length;i++){
+		if(shotballs.length>0){
 			for(var j=0;j<shotballs.length;j++){
-				if(balls[i][0].h>=shotballs[j].y-25 && balls[i][0].h<=shotballs[j].y+25){
-					for(var k=0;k<balls[i].length;k++){
-						if(balls[i][k].x>=shotballs[j].x-50 &&balls[i][k].x<=shotballs[j].x+50&&balls[i][k].c!='no'){
-							checkcolor(balls[i][k].x,balls[i][k].h,shotballs[j].x,shotballs[j].y,i,k,j);
+				for(var i=balls.length-1;i>=0;i--){
+					//入行
+					if(balls[i][0].h+25>=shotballs[j].y&&balls[i][0].h-25<shotballs[j].y){
+						for(var k=0;k<balls[i].length;k++){
+							if(distance(balls[i][k].x,balls[i][k].h,shotballs[j].x,shotballs[j].y)<25){
+								var res=checksurroundings(i,k,j);
+								if(res==false){
+									return;//不能停靠
+								}else{
+									if(res.length==1){//停靠
+										balls[i][k].c=shotballs[j].c;
+										if(balls[i+1]==undefined){
+											appendnoball(balls[i].length,balls[i][0].h);
+										}
+									}else{
+										res.shift();//等待被递归查询同色的数组。
+										findsamecolor(res);
+									}
+									deleteshotball(j);
+								}
+							}
 						}
 					}
 				}
 			}
 		}
 	}
-	function checkcolor(ballsx,ballsy,shotx,shoty,ballsline,ballscolumn,shotno){
-		var deletelist=judge(ballsline,ballscolumn,shotballs[shotno].c);
-	}
-	function judge(line,column,color){
-		var list=[];
-		var tmp=[];
-		if(balls[line][column].c==color){
-			list.push([line,column]);
+	function checksurroundings(line,column,num){//检查周围是否有可以停靠的球
+		//返回值：false为没有停靠单位，数组为周围同色的坐标。
+		var flag=0;// 0代表不停，如果周围有单位是彩色就设为1
+		var color=shotballs[num].c;
+		var list=[[0,0]];
+		var tmp='';
+		if(balls[line].length==7){
+				tmp=getballcolor(line-1,column);
+			if(tmp!='no'&&tmp!='ball_is_not_exist'){flag=1}
+			if(tmp==color){list.push([line-1,column])}
+				tmp=getballcolor(line-1,column+1);
+			if(tmp!='no'&&tmp!='ball_is_not_exist'){flag=1}
+			if(tmp==color){list.push([line-1,column+1])}
+				tmp=getballcolor(line,column-1);
+			if(tmp!='no'&&tmp!='ball_is_not_exist'){flag=1}
+			if(tmp==color){list.push([line,column-1])}
+				tmp=getballcolor(line,column+1);
+			if(tmp!='no'&&tmp!='ball_is_not_exist'){flag=1}
+			if(tmp==color){list.push([line,column+1])}
+				tmp=getballcolor(line+1,column);
+			if(tmp!='no'&&tmp!='ball_is_not_exist'){flag=1}
+			if(tmp==color){list.push([line+1,column])}
+				tmp=getballcolor(line+1,column+1);
+			if(tmp!='no'&&tmp!='ball_is_not_exist'){flag=1}
+			if(tmp==color){list.push([line+1,column+1])}
 		}
-		while(tmp=searchsurroundings(list)){
-			list=tmp;
-			searchsurroundings();
+		if(balls[line].length==8){
+				tmp=getballcolor(line-1,column);
+			if(tmp!='no'&&tmp!='ball_is_not_exist'){flag=1}
+			if(tmp==color){list.push([line-1,column])}
+				tmp=getballcolor(line-1,column-1);
+			if(tmp!='no'&&tmp!='ball_is_not_exist'){flag=1}
+			if(tmp==color){list.push([line-1,column-1])}
+				tmp=getballcolor(line,column-1);
+			if(tmp!='no'&&tmp!='ball_is_not_exist'){flag=1}
+			if(tmp==color){list.push([line,column-1])}
+				tmp=getballcolor(line,column+1);
+			if(tmp!='no'&&tmp!='ball_is_not_exist'){flag=1}
+			if(tmp==color){list.push([line,column+1])}
+				tmp=getballcolor(line+1,column);
+			if(tmp!='no'&&tmp!='ball_is_not_exist'){flag=1}
+			if(tmp==color){list.push([line+1,column])}
+				tmp=getballcolor(line+1,column-1);
+			if(tmp!='no'&&tmp!='ball_is_not_exist'){flag=1}
+			if(tmp==color){list.push([line+1,column-1])}
+		}
+		if(flag==1){
+			return list;
+		}else{
+			return false;
 		}
 	}
-	function searchsurroundings(list){//list=[[line,colum],[line,column],....]
-		var flag=0;
-		console.log(list)
-		for(var i=0;i<list.length;i++){
-			var templine=list[i][0];
-			var tempcolumn=list[i][1];
-			for(var j=tempcolumn-1;j<tempcolumn+2;j++){
-				
+	function getballcolor(line,column){
+		if(balls[line]!=undefined){
+				if(balls[line][column]!=undefined){
+				return balls[line][column].c;
+			}else{
+				return 'ball_is_not_exist';
 			}
+		}else{
+			return 'ball_is_not_exist';
 		}
+	}
+	function findsamecolor(list){
+
+	}
+	function deleteshotball(num){
+		if(num!=0){
+			var tmp=shotballs[num];
+		shotballs[num]=shotballs[0];
+		shotballs[0]=tmp;
+		}
+		shotballs.shift();
 	}
 	function distance(x,y,_x,_y){
 		return Math.sqrt((x-_x)*(x-_x)+(y-_y)*(y-_y));
