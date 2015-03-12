@@ -18,7 +18,7 @@
 	var colors=['red','green','pink','yellow','purple'];
 	var balls=[];
 	var shotballs=[];
-	var shotspeed=20;//the speed shotballs move
+	var shotspeed=30;//the speed shotballs move
 	var readys=[colors[Math.floor(Math.random()*colors.length)],colors[Math.floor(Math.random()*colors.length)]];
 	appendnoball(7,0);
 	canvas.addEventListener('click',shoot);
@@ -188,7 +188,7 @@
 										}
 									}else{
 										res.shift();//等待被递归查询同色的数组。
-										var samecolor=findsamecolor(res);console.log(samecolor)
+										var samecolor=findsamecolor(res);
 										if(samecolor.length<2){
 												balls[i][k].c=shotballs[j].c;
 											if(balls[i+1]==undefined){
