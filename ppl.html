@@ -14,7 +14,7 @@
 <script>
 	var canvas=document.getElementById('canvas')
 	var ctx=canvas.getContext('2d')
-	var speed=0.5;//the speed balls get down
+	var speed=0.2;//the speed balls get down
 	var colors=['red','green','pink','yellow','purple'];
 	var balls=[];
 	var shotballs=[];
@@ -177,7 +177,7 @@
 					if(balls[i][0].h+25>=shotballs[j].y&&balls[i][0].h-25<shotballs[j].y){
 						for(var k=0;k<balls[i].length;k++){
 							if(distance(balls[i][k].x,balls[i][k].h,shotballs[j].x,shotballs[j].y)<25){
-								var res=checksurroundings(i,k,j);
+								var res=checksurroundings(i,k,shotballs[j].c);
 								if(res==false){
 									return;//不能停靠
 								}else{
@@ -188,7 +188,17 @@
 										}
 									}else{
 										res.shift();//等待被递归查询同色的数组。
-										findsamecolor(res);
+										var samecolor=findsamecolor(res);console.log(samecolor)
+										if(samecolor.length<2){
+												balls[i][k].c=shotballs[j].c;
+											if(balls[i+1]==undefined){
+												appendnoball(balls[i].length,balls[i][0].h);
+											}
+										}else{
+											for(var l=0;l<samecolor.length;l++){
+												balls[samecolor[l][0]][samecolor[l][1]].c='no';
+											}
+										}
 									}
 									deleteshotball(j);
 								}
@@ -199,10 +209,11 @@
 			}
 		}
 	}
-	function checksurroundings(line,column,num){//检查周围是否有可以停靠的球
+	function checksurroundings(line,column,color){//检查周围是否有可以停靠的球
 		//返回值：false为没有停靠单位，数组为周围同色的坐标。
+		//出来结果需要shift一下。。
 		var flag=0;// 0代表不停，如果周围有单位是彩色就设为1
-		var color=shotballs[num].c;
+		var color=color;
 		var list=[[0,0]];
 		var tmp='';
 		if(balls[line].length==7){
@@ -262,8 +273,32 @@
 			return 'ball_is_not_exist';
 		}
 	}
-	function findsamecolor(list){
-
+	function findsamecolor(list){//输入为坐标的数组，输出为周围所有的同色坐标数组
+		//思路：遍历list，结果为：1.list周围没有同色，返回结果。2.还有同色，把同色加入list，重新运行。
+		var list=list;
+		var color=balls[list[0][0]][list[0][1]].c;
+		var latestfound=[];
+		var arrToBeCheck=list;
+		var cycleflag=0;
+		while(true){
+				cycleflag=0;
+				for(var i=0;i<arrToBeCheck.length;i++){//循环待检查的数组
+				var tmp=checksurroundings(arrToBeCheck[i][0],arrToBeCheck[i][1],color);
+				if(tmp!=false&&tmp.length!=1){
+					tmp.shift();
+					for(var j=0;j<tmp.length;j++){
+						if(!isIndexOf(list,tmp[j])){//若有新结果咋把flag设为1并把结果加入latestfound和list
+							cycleflag=1;
+							latestfound.push(tmp[j]);
+							list.push(tmp[j]);
+						}
+					}
+				}
+			}
+				if(cycleflag==0){return list;}
+				arrToBeCheck=latestfound;
+				latestfound=[];
+		}
 	}
 	function deleteshotball(num){
 		if(num!=0){
@@ -275,6 +310,13 @@
 	}
 	function distance(x,y,_x,_y){
 		return Math.sqrt((x-_x)*(x-_x)+(y-_y)*(y-_y));
+	}
+	function isIndexOf(longarr,singlearr){
+		var flag=0;
+		for(var i=0;i<longarr.length;i++){
+			if(singlearr.toString()==longarr[i].toString()){flag=1}
+		}
+		return flag==1?true:false;
 	}
 
 
