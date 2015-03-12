@@ -18,6 +18,7 @@
 	var colors=['red','green','pink','yellow','purple'];
 	var balls=[];
 	var shotballs=[];
+	var fellballs=[];
 	var shotspeed=30;//the speed shotballs move
 	var readys=[colors[Math.floor(Math.random()*colors.length)],colors[Math.floor(Math.random()*colors.length)]];
 	appendnoball(7,0);
@@ -72,7 +73,20 @@
 				shotballs[i].vx*=-1;
 			}
 		}
-		
+		//fellballs的更新
+			var cnt=0; 
+		for(var i=0;i<fellballs.length;i++){
+			if(fellballs[i].y<=600){
+				fellballs[cnt++]=fellballs[i];
+			}
+
+			fellballs[i].x+=fellballs[i].vx;
+			fellballs[i].y+=fellballs[i].vy;
+			fellballs[i].vy+=fellballs[i].g;
+		}
+		while(fellballs.length>cnt){
+			fellballs.pop();
+		}
 
 	}
 	function appendball(length,height){
@@ -138,6 +152,13 @@
 			ctx.fillStyle = shotballs[i].c;
 			ctx.fill();
 		}
+		//fellballs
+		for(var i=0;i<fellballs.length;i++){
+			ctx.beginPath();
+			ctx.arc(fellballs[i].x, fellballs[i].y, 25, 0, 2*Math.PI);
+			ctx.fillStyle = fellballs[i].c;
+			ctx.fill();
+		}
 	}
 	function drawreadys(){
 		ctx.beginPath();
@@ -182,10 +203,22 @@
 									return;//不能停靠
 								}else{
 									if(res.length==1){//停靠
-										balls[i][k].c=shotballs[j].c;
-										if(balls[i+1]==undefined){
-											appendnoball(balls[i].length,balls[i][0].h);
+										if(balls[i][k].h>shotballs[j].y-25&&balls[i][k].h<shotballs[j].y+25){
+											if(distance(balls[i][k].x,balls[i][k].h,shotballs[j].x,shotballs[j].y)<12){
+												balls[i][k].c=shotballs[j].c;
+												if(balls[i+1]==undefined){
+													appendnoball(balls[i].length,balls[i][0].h);
+												}
+											}else{
+												return;
+											}
+										}else{
+											balls[i][k].c=shotballs[j].c;
+												if(balls[i+1]==undefined){
+													appendnoball(balls[i].length,balls[i][0].h);
+												}
 										}
+										
 									}else{
 										res.shift();//等待被递归查询同色的数组。
 										var samecolor=findsamecolor(res);
@@ -196,8 +229,10 @@
 											}
 										}else{
 											for(var l=0;l<samecolor.length;l++){
+												addfellball(balls[samecolor[l][0]][samecolor[l][1]].x,balls[samecolor[l][0]][samecolor[l][1]].h,balls[samecolor[l][0]][samecolor[l][1]].c);
 												balls[samecolor[l][0]][samecolor[l][1]].c='no';
 											}
+												addfellball(shotballs[j].x,shotballs[j].y,shotballs[j].c);
 										}
 									}
 									deleteshotball(j);
@@ -211,7 +246,7 @@
 	}
 	function checksurroundings(line,column,color){//检查周围是否有可以停靠的球
 		//返回值：false为没有停靠单位，数组为周围同色的坐标。
-		//出来结果需要shift一下。。
+		//强烈注意：因为空数组length有点坑，所以加了个[0,0]，所以出来结果需要shift一下。。
 		var flag=0;// 0代表不停，如果周围有单位是彩色就设为1
 		var color=color;
 		var list=[[0,0]];
@@ -287,7 +322,7 @@
 				if(tmp!=false&&tmp.length!=1){
 					tmp.shift();
 					for(var j=0;j<tmp.length;j++){
-						if(!isIndexOf(list,tmp[j])){//若有新结果咋把flag设为1并把结果加入latestfound和list
+						if(!isIndexOf(list,tmp[j])){//若有新结果则把flag设为1并把结果加入latestfound和list
 							cycleflag=1;
 							latestfound.push(tmp[j]);
 							list.push(tmp[j]);
@@ -317,6 +352,10 @@
 			if(singlearr.toString()==longarr[i].toString()){flag=1}
 		}
 		return flag==1?true:false;
+	}
+	function addfellball(x,y,c){
+		var fb={x:x,y:y,c:c,vx:Math.random()*6-3,vy:Math.random()*6-14,g:2};
+		fellballs.push(fb);
 	}
 
 
