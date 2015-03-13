@@ -7,14 +7,15 @@
 <body>
 	<canvas id="canvas" width='400' height='600' style='border:1px solid #666'></canvas>
 	<button onclick='play()'>play</button>
-	<button onclick='start()'>start</button>
+	<button onclick='pause()'>pause</button>
 </body>
 </html>
-
 <script>
 	var canvas=document.getElementById('canvas')
 	var ctx=canvas.getContext('2d')
+	var gamestart=null;
 	var speed=0.2;//the speed balls get down
+	speed=0;
 	var colors=['red','green','pink','yellow','purple'];
 	var balls=[];
 	var shotballs=[];
@@ -23,13 +24,16 @@
 	var readys=[colors[Math.floor(Math.random()*colors.length)],colors[Math.floor(Math.random()*colors.length)]];
 	appendnoball(7,0);
 	canvas.addEventListener('click',shoot);
-	
+	start();
+	function pause(){
+		clearInterval(gamestart);
+	}
 	function play(){
 		render();
 		update();
 	}
 	function start(){
-		var gamestart=setInterval(function(){
+		gamestart=setInterval(function(){
 		render();
 		update();
 	},20);
@@ -128,7 +132,7 @@
 					if(balls[i][j].c!='no'){
 						ctx.beginPath();
 					ctx.arc(50*j+25, balls[i][j].h, 25, 0, 2*Math.PI);
-					ctx.fillStyle = balls[i][j].c;
+					ctx.fillStyle = ragd(50*j+25, balls[i][j].h,balls[i][j].c);
 					ctx.fill();
 					}
 					
@@ -138,7 +142,7 @@
 					if(balls[i][k].c!='no'){
 						ctx.beginPath();
 						ctx.arc(50*k+50, balls[i][k].h, 25, 0, 2*Math.PI);
-						ctx.fillStyle = balls[i][k].c;
+						ctx.fillStyle = ragd(50*k+50, balls[i][k].h,balls[i][k].c);
 						ctx.fill();
 					}
 					
@@ -149,25 +153,25 @@
 		for(var i=0;i<shotballs.length;i++){
 			ctx.beginPath();
 			ctx.arc(shotballs[i].x, shotballs[i].y, 25, 0, 2*Math.PI);
-			ctx.fillStyle = shotballs[i].c;
+			ctx.fillStyle = ragd(shotballs[i].x, shotballs[i].y,shotballs[i].c);
 			ctx.fill();
 		}
 		//fellballs
 		for(var i=0;i<fellballs.length;i++){
 			ctx.beginPath();
 			ctx.arc(fellballs[i].x, fellballs[i].y, 25, 0, 2*Math.PI);
-			ctx.fillStyle = fellballs[i].c;
+			ctx.fillStyle = ragd(fellballs[i].x, fellballs[i].y,fellballs[i].c);
 			ctx.fill();
 		}
 	}
 	function drawreadys(){
 		ctx.beginPath();
 		ctx.arc(200, 500, 25, 0, 2*Math.PI);
-		ctx.fillStyle = readys[0];
+		ctx.fillStyle = ragd(200,500,readys[0])
 		ctx.fill();
 		ctx.beginPath();
 		ctx.arc(100, 550 , 17, 0, 2*Math.PI);
-		ctx.fillStyle = readys[1];
+		ctx.fillStyle = ragd(100,500,readys[1]);
 		ctx.fill();
 	}
 	function shoot(e){
@@ -203,36 +207,36 @@
 									return;//不能停靠
 								}else{
 									if(res.length==1){//停靠
-										if(balls[i][k].h>shotballs[j].y-25&&balls[i][k].h<shotballs[j].y+25){
-											if(distance(balls[i][k].x,balls[i][k].h,shotballs[j].x,shotballs[j].y)<12){
-												balls[i][k].c=shotballs[j].c;
-												if(balls[i+1]==undefined){
-													appendnoball(balls[i].length,balls[i][0].h);
-												}
-											}else{
-												return;
+										//stopBall(i,k,j)即可停靠
+										//此处要做一个判断，让小球继续走几步，若走到的地方不是这个球了并且不为no，才停下。不然return
+										//走一步
+										for(var m=0;m<balls[i-1].length;m++){
+											if(distance(balls[i-1][m].x,balls[i-1][m].h,shotballs[j].x+shotballs[j].vx,shotballs[j].y+shotballs[j].vy)<25){
+												//然后判断是否为空
+												if(balls[i-1][m].c=='no'){return;}
 											}
-										}else{
-											balls[i][k].c=shotballs[j].c;
-												if(balls[i+1]==undefined){
-													appendnoball(balls[i].length,balls[i][0].h);
-												}
+											if(distance(balls[i-1][m].x,balls[i-1][m].h,shotballs[j].x+2*shotballs[j].vx,shotballs[j].y+2*shotballs[j].vy)<25){
+												if(balls[i-1][m].c=='no'){return;}
+											}
 										}
-										
+										stopBall(i,k,j);
+										//走两步
 									}else{
 										res.shift();//等待被递归查询同色的数组。
 										var samecolor=findsamecolor(res);
 										if(samecolor.length<2){
-												balls[i][k].c=shotballs[j].c;
-											if(balls[i+1]==undefined){
-												appendnoball(balls[i].length,balls[i][0].h);
-											}
+												stopBall(i,k,j);
 										}else{
 											for(var l=0;l<samecolor.length;l++){
 												addfellball(balls[samecolor[l][0]][samecolor[l][1]].x,balls[samecolor[l][0]][samecolor[l][1]].h,balls[samecolor[l][0]][samecolor[l][1]].c);
 												balls[samecolor[l][0]][samecolor[l][1]].c='no';
 											}
 												addfellball(shotballs[j].x,shotballs[j].y,shotballs[j].c);
+												var extrafell=findunstuckball();
+												for(var n=0;n<extrafell.length;n++){
+												addfellball(balls[extrafell[n][0]][extrafell[n][1]].x,balls[extrafell[n][0]][extrafell[n][1]].h,balls[extrafell[n][0]][extrafell[n][1]].c);
+												balls[extrafell[n][0]][extrafell[n][1]].c='no';
+											}
 										}
 									}
 									deleteshotball(j);
@@ -357,6 +361,60 @@
 		var fb={x:x,y:y,c:c,vx:Math.random()*6-3,vy:Math.random()*6-14,g:2};
 		fellballs.push(fb);
 	}
+	function stopBall(x,y,num){
+		balls[x][y].c=shotballs[num].c;
+		if(balls[x+1]==undefined){
+		appendnoball(balls[x].length,balls[x][0].h);
+		}
+	}
+	function findunstuckball(){
+		//返回值：[[line,column],[line,colum],...]
+		var stuck=[];
+		var unstuck=[];
+		for(var i=0;i<balls[0].length;i++){//初始化stuck
+			if(balls[0][i].c!='no'){
+				stuck.push([0,i]);
+			}
+		}
+		//开始遍历来确定初次结果
+		for(var i=1;i<balls.length;i++){
+			for(var j=0;j<balls[i].length;j++){
+				if(balls[i][j].c!='no'){
+						if(isStuck(i,j,stuck)){
+						stuck.push([i,j])
+					}else{
+						unstuck.push([i,j])
+					}
+				}
+			}
+		}
+		return unstuck;
+	}
+	function isStuck(i,j,stuck){
+		if(balls[i].length==7){
+			if(isIndexOf(stuck,[i-1,j])){return true;}
+			if(isIndexOf(stuck,[i-1,j+1])){return true;}
+			if(isIndexOf(stuck,[i,j-1])){return true;}
+			if(isIndexOf(stuck,[i,j+1])){return true;}
+			if(isIndexOf(stuck,[i+1,j])){return true;}
+			if(isIndexOf(stuck,[i+1,j+1])){return true;}
+		}else{
+			if(isIndexOf(stuck,[i-1,j])){return true;}
+			if(isIndexOf(stuck,[i-1,j-1])){return true;}
+			if(isIndexOf(stuck,[i,j-1])){return true;}
+			if(isIndexOf(stuck,[i,j+1])){return true;}
+			if(isIndexOf(stuck,[i+1,j])){return true;}
+			if(isIndexOf(stuck,[i+1,j-1])){return true;}
+		}
+		return false;
+	}
+	function ragd(x,y,color){
+		var gradient=ctx.createRadialGradient(x+5, y-5, 2, x, y, 25);
+		gradient.addColorStop(0.0,'white');
+		gradient.addColorStop(1.0,color);
+		return gradient;
+	}
+
 
 
 </script>
