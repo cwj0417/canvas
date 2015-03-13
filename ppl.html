@@ -5,7 +5,7 @@
 	<title>Document</title>
 </head>
 <body>
-	<canvas id="canvas" width='400' height='600' style='border:1px solid #666'></canvas>
+	<canvas id="canvas" width='356' height='600' style='border:1px solid #666'></canvas>
 	<button onclick='play()'>play</button>
 	<button onclick='pause()'>pause</button>
 </body>
@@ -14,13 +14,17 @@
 	var canvas=document.getElementById('canvas')
 	var ctx=canvas.getContext('2d')
 	var gamestart=null;
-	var speed=0.2;//the speed balls get down
-	speed=0;
+	var score=0;
+	var hit=0;
+	var fell=0;
+	var combo=0;
+	var maxcombo=0;
+	var speed=0.1+0.1*(score/10000);//the speed balls get down
 	var colors=['red','green','pink','yellow','purple'];
 	var balls=[];
 	var shotballs=[];
 	var fellballs=[];
-	var shotspeed=30;//the speed shotballs move
+	var shotspeed=25;//the speed shotballs move
 	var readys=[colors[Math.floor(Math.random()*colors.length)],colors[Math.floor(Math.random()*colors.length)]];
 	appendnoball(7,0);
 	canvas.addEventListener('click',shoot);
@@ -39,13 +43,10 @@
 	},20);
 	}
 	function render(){
-		ctx.clearRect(0, 0, 400, 600);
-		ctx.beginPath();
-		ctx.moveTo(0, 450);
-		ctx.lineTo(400, 450);
-		ctx.stroke();
+		ctx.clearRect(0, 0, 356, 600);
 		drawballs();
 		drawreadys();
+		drawinfo();
 	}
 	function update(){
 		//shotballs和balls的碰撞检测
@@ -61,19 +62,19 @@
 			}
 		}
 		//消失判定/结束判定
-		if(balls.length>=12){
+		if(balls.length>=18){
 			balls.pop();
 		}
 		//shotballs的更新
 		for(var i=0;i<shotballs.length;i++){
 			shotballs[i].x+=shotballs[i].vx;
 			shotballs[i].y+=shotballs[i].vy;
-			if(shotballs[i].x+25>=400){
-				shotballs[i].x=400-25;
+			if(shotballs[i].x+16>=256){
+				shotballs[i].x=256-16;
 				shotballs[i].vx*=-1;
 			}
-			if(shotballs[i].x-25<=0){
-				shotballs[i].x=25;
+			if(shotballs[i].x-16<=0){
+				shotballs[i].x=16;
 				shotballs[i].vx*=-1;
 			}
 		}
@@ -83,7 +84,6 @@
 			if(fellballs[i].y<=600){
 				fellballs[cnt++]=fellballs[i];
 			}
-
 			fellballs[i].x+=fellballs[i].vx;
 			fellballs[i].y+=fellballs[i].vy;
 			fellballs[i].vy+=fellballs[i].g;
@@ -97,12 +97,12 @@
 		var line=[];
 		if(length==7){
 				for(var i=0;i<8;i++){
-				var ball={'c':colors[Math.floor(Math.random()*colors.length)],'h':height-25*Math.sqrt(3),'x':50*i+25};
+				var ball={'c':colors[Math.floor(Math.random()*colors.length)],'h':height-16*Math.sqrt(3),'x':32*i+16};
 				line.push(ball);
 			}
 		}else{
 				for(var i=0;i<7;i++){
-				var ball={'c':colors[Math.floor(Math.random()*colors.length)],'h':height-25*Math.sqrt(3),'x':50*i+50};
+				var ball={'c':colors[Math.floor(Math.random()*colors.length)],'h':height-16*Math.sqrt(3),'x':32*i+32};
 				line.push(ball);
 			}
 		}
@@ -113,12 +113,12 @@
 		var line=[];
 		if(length==7){
 				for(var i=0;i<8;i++){
-				var ball={'c':'no','h':height+25*Math.sqrt(3),'x':50*i+25};
+				var ball={'c':'no','h':height+16*Math.sqrt(3),'x':32*i+16};
 				line.push(ball);
 			}
 		}else{
 				for(var i=0;i<7;i++){
-				var ball={'c':'no','h':height+25*Math.sqrt(3),'x':50*i+50};
+				var ball={'c':'no','h':height+16*Math.sqrt(3),'x':32*i+32};
 				line.push(ball);
 			}
 		}
@@ -131,8 +131,8 @@
 				for(var j=0;j<8;j++){
 					if(balls[i][j].c!='no'){
 						ctx.beginPath();
-					ctx.arc(50*j+25, balls[i][j].h, 25, 0, 2*Math.PI);
-					ctx.fillStyle = ragd(50*j+25, balls[i][j].h,balls[i][j].c);
+					ctx.arc(32*j+16, balls[i][j].h, 16, 0, 2*Math.PI);
+					ctx.fillStyle = ragd(32*j+16, balls[i][j].h,balls[i][j].c);
 					ctx.fill();
 					}
 					
@@ -141,8 +141,8 @@
 				for(var k=0;k<7;k++){
 					if(balls[i][k].c!='no'){
 						ctx.beginPath();
-						ctx.arc(50*k+50, balls[i][k].h, 25, 0, 2*Math.PI);
-						ctx.fillStyle = ragd(50*k+50, balls[i][k].h,balls[i][k].c);
+						ctx.arc(32*k+32, balls[i][k].h, 16, 0, 2*Math.PI);
+						ctx.fillStyle = ragd(32*k+32, balls[i][k].h,balls[i][k].c);
 						ctx.fill();
 					}
 					
@@ -152,27 +152,56 @@
 		//shotballs
 		for(var i=0;i<shotballs.length;i++){
 			ctx.beginPath();
-			ctx.arc(shotballs[i].x, shotballs[i].y, 25, 0, 2*Math.PI);
+			ctx.arc(shotballs[i].x, shotballs[i].y, 16, 0, 2*Math.PI);
 			ctx.fillStyle = ragd(shotballs[i].x, shotballs[i].y,shotballs[i].c);
 			ctx.fill();
 		}
 		//fellballs
 		for(var i=0;i<fellballs.length;i++){
 			ctx.beginPath();
-			ctx.arc(fellballs[i].x, fellballs[i].y, 25, 0, 2*Math.PI);
+			ctx.arc(fellballs[i].x, fellballs[i].y, 16, 0, 2*Math.PI);
 			ctx.fillStyle = ragd(fellballs[i].x, fellballs[i].y,fellballs[i].c);
 			ctx.fill();
 		}
 	}
 	function drawreadys(){
 		ctx.beginPath();
-		ctx.arc(200, 500, 25, 0, 2*Math.PI);
-		ctx.fillStyle = ragd(200,500,readys[0])
+		ctx.arc(128, 500, 16, 0, 2*Math.PI);
+		ctx.fillStyle = ragd(128,500,readys[0])
 		ctx.fill();
 		ctx.beginPath();
-		ctx.arc(100, 550 , 17, 0, 2*Math.PI);
-		ctx.fillStyle = ragd(100,500,readys[1]);
+		ctx.arc(90, 550 , 12, 0, 2*Math.PI);
+		ctx.fillStyle = ragd(90,500,readys[1]);
 		ctx.fill();
+	}
+	function drawinfo(){
+		ctx.beginPath();
+		ctx.moveTo(0, 450);
+		ctx.lineTo(256, 450);
+		ctx.moveTo(256, 0);
+		ctx.lineTo(256, 600);
+		ctx.stroke();
+		ctx.fillStyle = "red";
+		ctx.font = 'normal 30px MicrosoftYahei';
+		writecenter(score,50);
+		ctx.fillStyle = "#999";
+		ctx.font = "normal 15px 宋体";
+		writeleft('消球得分:'+hit,80);
+		writeleft('掉落得分:'+fell,100);
+		ctx.fillStyle = "black";
+		ctx.font = "normal 20px 微软雅黑";
+		writecenter('连击',180);
+		writecenter('最大连击',300);
+		ctx.fillStyle = "#f0f";
+		ctx.font = "normal 18px 宋体";
+		writecenter(combo,220);
+		writecenter(maxcombo,340);
+	}
+	function writecenter(text,height){
+		ctx.fillText(text, 306-ctx.measureText(text).width/2, height,90);
+	}
+	function writeleft(text,height){
+		ctx.fillText(text, 260, height, 90);
 	}
 	function shoot(e){
 		var x=e.offsetX;
@@ -185,10 +214,10 @@
 			return;
 		}
 		//在shotballs里加球
-		var _x=x-200;
+		var _x=x-128;
 		var _y=y-500;
 		var speedvector=Math.sqrt(_x*_x+_y*_y);
-		var newshotball={'c':readys[0],x:200,y:500,vx:shotspeed/speedvector*_x,vy:shotspeed/speedvector*_y};
+		var newshotball={'c':readys[0],x:128,y:500,vx:shotspeed/speedvector*_x,vy:shotspeed/speedvector*_y};
 		shotballs.push(newshotball);
 		//ready改变
 		readys[0]=readys[1];
@@ -199,9 +228,9 @@
 			for(var j=0;j<shotballs.length;j++){
 				for(var i=balls.length-1;i>=0;i--){
 					//入行
-					if(balls[i][0].h+25>=shotballs[j].y&&balls[i][0].h-25<shotballs[j].y){
+					if(balls[i][0].h+16>=shotballs[j].y&&balls[i][0].h-16<shotballs[j].y){
 						for(var k=0;k<balls[i].length;k++){
-							if(distance(balls[i][k].x,balls[i][k].h,shotballs[j].x,shotballs[j].y)<25){
+							if(distance(balls[i][k].x,balls[i][k].h,shotballs[j].x,shotballs[j].y)<16){
 								var res=checksurroundings(i,k,shotballs[j].c);
 								if(res==false){
 									return;//不能停靠
@@ -211,11 +240,11 @@
 										//此处要做一个判断，让小球继续走几步，若走到的地方不是这个球了并且不为no，才停下。不然return
 										//走一步
 										for(var m=0;m<balls[i-1].length;m++){
-											if(distance(balls[i-1][m].x,balls[i-1][m].h,shotballs[j].x+shotballs[j].vx,shotballs[j].y+shotballs[j].vy)<25){
+											if(distance(balls[i-1][m].x,balls[i-1][m].h,shotballs[j].x+shotballs[j].vx,shotballs[j].y+shotballs[j].vy)<16){
 												//然后判断是否为空
 												if(balls[i-1][m].c=='no'){return;}
 											}
-											if(distance(balls[i-1][m].x,balls[i-1][m].h,shotballs[j].x+2*shotballs[j].vx,shotballs[j].y+2*shotballs[j].vy)<25){
+											if(distance(balls[i-1][m].x,balls[i-1][m].h,shotballs[j].x+2*shotballs[j].vx,shotballs[j].y+2*shotballs[j].vy)<16){
 												if(balls[i-1][m].c=='no'){return;}
 											}
 										}
@@ -227,12 +256,15 @@
 										if(samecolor.length<2){
 												stopBall(i,k,j);
 										}else{
+											hit+=(samecolor.length+1)*(100+10*combo);
+											maxcombo=combo++>maxcombo?combo:maxcombo;
 											for(var l=0;l<samecolor.length;l++){
 												addfellball(balls[samecolor[l][0]][samecolor[l][1]].x,balls[samecolor[l][0]][samecolor[l][1]].h,balls[samecolor[l][0]][samecolor[l][1]].c);
 												balls[samecolor[l][0]][samecolor[l][1]].c='no';
 											}
 												addfellball(shotballs[j].x,shotballs[j].y,shotballs[j].c);
 												var extrafell=findunstuckball();
+												fell+=(extrafell.length)*(100+10*combo);
 												for(var n=0;n<extrafell.length;n++){
 												addfellball(balls[extrafell[n][0]][extrafell[n][1]].x,balls[extrafell[n][0]][extrafell[n][1]].h,balls[extrafell[n][0]][extrafell[n][1]].c);
 												balls[extrafell[n][0]][extrafell[n][1]].c='no';
@@ -360,12 +392,18 @@
 	function addfellball(x,y,c){
 		var fb={x:x,y:y,c:c,vx:Math.random()*6-3,vy:Math.random()*6-14,g:2};
 		fellballs.push(fb);
+		var getscore=100+10*(combo-1);
+		addscore(getscore);
+	}
+	function addscore(num){
+		score+=num;
 	}
 	function stopBall(x,y,num){
 		balls[x][y].c=shotballs[num].c;
 		if(balls[x+1]==undefined){
 		appendnoball(balls[x].length,balls[x][0].h);
 		}
+		combo=0;
 	}
 	function findunstuckball(){
 		//返回值：[[line,column],[line,colum],...]
@@ -409,7 +447,7 @@
 		return false;
 	}
 	function ragd(x,y,color){
-		var gradient=ctx.createRadialGradient(x+5, y-5, 2, x, y, 25);
+		var gradient=ctx.createRadialGradient(x+5, y-5, 2, x, y, 16);
 		gradient.addColorStop(0.0,'white');
 		gradient.addColorStop(1.0,color);
 		return gradient;
