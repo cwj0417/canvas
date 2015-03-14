@@ -264,7 +264,7 @@
 											}
 												addfellball(shotballs[j].x,shotballs[j].y,shotballs[j].c);
 												var extrafell=findunstuckball();
-												fell+=(extrafell.length)*(100+10*combo);
+												fell+=(extrafell.length)*(100+10*(combo-1));
 												for(var n=0;n<extrafell.length;n++){
 												addfellball(balls[extrafell[n][0]][extrafell[n][1]].x,balls[extrafell[n][0]][extrafell[n][1]].h,balls[extrafell[n][0]][extrafell[n][1]].c);
 												balls[extrafell[n][0]][extrafell[n][1]].c='no';
