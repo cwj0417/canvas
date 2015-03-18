@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>bezier</title>
+	<style>
+	#code{width:400px; height:400px; resize:none;}
+	</style>
+</head>
+<body ng-app="canvas">
+	<canvas id="display" width='500' height='400'></canvas>
+	<textarea  id="code" disabled></textarea>
+</body>
+</html>
+<script>
+	var c=document.getElementById('display');
+	var ctx=c.getContext('2d');
+	var ctrlpt={ 'qix':300, 'qiy':200 ,'qcpx':350,'qcpy':100,'qx':400,'qy':200
+,'b1x':100,'b1y':200,'b2x':100,'b2y':100,'b3x':200,'b3y':100,'b4x':200,'b4y':200
+};
+	var startx;var starty;var endx;var endy;
+	c.addEventListener('mousedown',function(e){md(e);})
+	c.addEventListener('mouseup',function(){
+		c.onmousemove=function(){}
+	})
+	excute();
+
+
+	function md(e){
+		startx=e.offsetX;
+		starty=e.offsetY;
+		if(isincircle(ctrlpt.qix, ctrlpt.qiy)){
+			changepos('qi');
+		}
+		if(isincircle(ctrlpt.qcpx, ctrlpt.qcpy)){
+			changepos('qcp');
+		}
+		if(isincircle(ctrlpt.qx, ctrlpt.qy)){
+			changepos('q');
+		}
+		if(isincircle(ctrlpt.b1x, ctrlpt.b1y)){
+			changepos('b1');
+		}
+		if(isincircle(ctrlpt.b2x, ctrlpt.b2y)){
+			changepos('b2');
+		}
+		if(isincircle(ctrlpt.b3x, ctrlpt.b3y)){
+			changepos('b3');
+		}
+		if(isincircle(ctrlpt.b4x, ctrlpt.b4y)){
+			changepos('b4');
+		}
+	}
+	function excode(){
+		var code=document.getElementById('code').value;
+		eval(code);
+	}
+	function draw(){
+		ctx.clearRect(0, 0, 500, 400);
+		ctx.beginPath();
+		ctx.strokeStyle = "#000";
+		ctx.moveTo(ctrlpt.qix, ctrlpt.qiy);
+		ctx.quadraticCurveTo(ctrlpt.qcpx, ctrlpt.qcpy, ctrlpt.qx,ctrlpt.qy);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(ctrlpt.b1x, ctrlpt.b1y);
+		ctx.bezierCurveTo(ctrlpt.b2x, ctrlpt.b2y, ctrlpt.b3x, ctrlpt.b3y, ctrlpt.b4x, ctrlpt.b4y);
+		ctx.stroke();
+		ctx.strokeStyle = "rgba(0,0,0,.3)";
+		ctx.beginPath();
+		ctx.moveTo(ctrlpt.qix, ctrlpt.qiy);
+		ctx.lineTo(ctrlpt.qcpx, ctrlpt.qcpy);
+		ctx.lineTo(ctrlpt.qx,ctrlpt.qy);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(ctrlpt.b1x, ctrlpt.b1y);
+		ctx.lineTo(ctrlpt.b2x, ctrlpt.b2y);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(ctrlpt.b3x, ctrlpt.b3y);
+		ctx.lineTo(ctrlpt.b4x, ctrlpt.b4y);
+		ctx.stroke();
+		drawctrlcircle(ctrlpt.qix, ctrlpt.qiy);
+		drawctrlcircle(ctrlpt.qcpx, ctrlpt.qcpy);
+		drawctrlcircle(ctrlpt.qx,ctrlpt.qy);
+		drawctrlcircle(ctrlpt.b1x,ctrlpt.b1y);
+		drawctrlcircle(ctrlpt.b2x,ctrlpt.b2y);
+		drawctrlcircle(ctrlpt.b3x,ctrlpt.b3y);
+		drawctrlcircle(ctrlpt.b4x,ctrlpt.b4y);
+	}
+	function drawctrlcircle(x,y){
+		ctx.beginPath();
+		ctx.arc(x, y, 5, 0, 2*Math.PI);
+		ctx.fillStyle = "#f00";
+		ctx.fill();
+	}
+	function excute(){
+		draw();
+		synctext();
+	}
+	function isincircle(x,y){
+		return (startx-x)*(startx-x)+(starty-y)*(starty-y)<=25?true:false;
+	}
+	function changepos(a){
+		c.onmousemove=function(e){
+			endx=e.offsetX;
+			endy=e.offsetY;
+			switch(a) {
+				case 'qi': 
+					ctrlpt.qix+=endx-startx;
+					startx=ctrlpt.qix;
+					ctrlpt.qiy+=endy-starty;
+					starty=ctrlpt.qiy;
+					break;
+				case 'qcp': 
+					ctrlpt.qcpx+=endx-startx;
+					startx=ctrlpt.qcpx;
+					ctrlpt.qcpy+=endy-starty;
+					starty=ctrlpt.qcpy;
+					break;
+				case 'q': 
+					ctrlpt.qx+=endx-startx;
+					startx=ctrlpt.qx;
+					ctrlpt.qy+=endy-starty;
+					starty=ctrlpt.qy;
+					break;
+				case 'b1': 
+					ctrlpt.b1x+=endx-startx;
+					startx=ctrlpt.b1x;
+					ctrlpt.b1y+=endy-starty;
+					starty=ctrlpt.b1y;
+					break;
+				case 'b2': 
+					ctrlpt.b2x+=endx-startx;
+					startx=ctrlpt.b2x;
+					ctrlpt.b2y+=endy-starty;
+					starty=ctrlpt.b2y;
+					break;
+				case 'b3': 
+					ctrlpt.b3x+=endx-startx;
+					startx=ctrlpt.b3x;
+					ctrlpt.b3y+=endy-starty;
+					starty=ctrlpt.b3y;
+					break;
+				case 'b4': 
+					ctrlpt.b4x+=endx-startx;
+					startx=ctrlpt.b4x;
+					ctrlpt.b4y+=endy-starty;
+					starty=ctrlpt.b4y;
+					break;
+			};
+			excute();
+		}
+	}
+	function synctext(){
+		document.getElementById('code').value="var canvas=document.getElementById('canvas');\nvar ctx=canvas.getContext('2d');\nctx.beginPath();\nctx.moveTo("+ctrlpt.qix+", "+ctrlpt.qiy+");\nctx.quadraticCurveTo("+ctrlpt.qcpx+", "+ctrlpt.qcpy+", "+ctrlpt.qx+", "+ctrlpt.qy+");\nctx.stroke();\nctx.moveTo("+ctrlpt.b1x+", "+ctrlpt.b1y+");\nctx.bezierCurveTo("+ctrlpt.b2x+", "+ctrlpt.b2y+", "+ctrlpt.b3x+", "+ctrlpt.b3y+", "+ctrlpt.b4x+", "+ctrlpt.b4y+");\nctx.stroke();\n"
+	}
+</script>
