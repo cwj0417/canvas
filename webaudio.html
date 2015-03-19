@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	
+    <button onclick="play()">play</button>
+    <button onclick="stop()">stop</button>
+</body>
+</html>
+<script>
+	function $(s){return document.querySelectorAll(s);}
+
+
+    var ac=new (window.AudioContext || window.webkitAudioContext);
+    var source=ac.createBufferSource();
+    var gain=ac.createGain();
+    var xhr=new XMLHttpRequest();
+    source.connect(gain);
+    xhr.open('GET','secretbase.mp3');
+    xhr.responseType = 'arraybuffer';
+    xhr.onload=function(){
+        ac.decodeAudioData(xhr.response,function(buffer){
+            source.buffer=buffer;
+            source.connect(ac.destination);
+            
+        })
+    }
+    xhr.send();
+
+    function play(){
+        source.start(0,14);
+    }
+    function stop(){
+        source.stop();
+    }
+</script>
