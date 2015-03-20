@@ -5,18 +5,29 @@
 	<title>Document</title>
 </head>
 <body>
-	
+<canvas id="canvas"></canvas>
+	<input type="range" min='0' max='100' value='10' id='volumn'>
     <button onclick="play()">play</button>
     <button onclick="stop()">stop</button>
 </body>
 </html>
 <script>
+    var canvas=document.getElementById('canvas')
+    canvas.width=128*2;
+    canvas.height=256;
+    var ctx=canvas.getContext('2d')
+    ctx.fillStyle = "black";
+    window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 	function $(s){return document.querySelectorAll(s);}
 
 
     var ac=new (window.AudioContext || window.webkitAudioContext);
     var source=ac.createBufferSource();
     var gain=ac.createGain();
+    gain.gain.value=0.01;
+    var ana=ac.createAnalyser();
+    var size=128
+    ana.fftSize=size*2;
     var xhr=new XMLHttpRequest();
     source.connect(gain);
     xhr.open('GET','secretbase.mp3');
@@ -24,16 +35,47 @@
     xhr.onload=function(){
         ac.decodeAudioData(xhr.response,function(buffer){
             source.buffer=buffer;
-            source.connect(ac.destination);
-            
+            source.connect(ana);
+            ana.connect(gain);
+            gain.connect(ac.destination);
+            analyse();
         })
     }
     xhr.send();
 
     function play(){
-        source.start(0,14);
+        source.start(0,0);
     }
     function stop(){
         source.stop();
+    }
+    function changevolumn(percent){
+        gain.gain.value=percent*percent;
+    }
+    var volumninput=document.getElementById('volumn');
+    volumninput.onmousedown=function(){
+        volumninput.onmousemove=function(){
+            changevolumn(this.value/100);
+        }
+        volumninput.mouseup=function(){
+            volumninput.onmousemove=function(){}
+        }
+    }
+    function analyse(){
+        var arr=new Uint8Array(ana.frequencyBinCount);
+        requestAnimationFrame(animate);
+        function animate(){
+            ana.getByteFrequencyData(arr);
+            draw(arr);
+            requestAnimationFrame(animate);
+        }
+        
+    }
+    function draw(arr){
+        ctx.clearRect(0, 0, 256, 256);
+        ctx.fillStyle = "black";
+        for(var i=0;i<size;i++){
+           ctx.fillRect(2*i, 256-arr[i], 2,arr[i]);
+        }
     }
 </script>
