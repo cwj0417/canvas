@@ -9,3 +9,4 @@ body{background: #ccc;font-family: 黑体;}
 .list li:hover{background: #ddd;border-left: 4px solid #FFEC8B;font-weight: bold;text-indent: 4em;}
 .name{height: 100px;width: 500px;font-weight: bold;font-size: 2em;}
 .musicstatus{height: 100px;width: 1000px;}
+.selected{background: #EEE9E9;border-radius: 10px;box-shadow: 0 0 3px 3px rgba(0,50,50,.5);font-weight: bold;}

@@ -1,5 +1,5 @@
 <div class="list">
-<ul ng-repeat="music in musiclist">
-	<li action='playmusic("{{music.url}}","{{music.name}}")' detectactive='curmusic()'>{{music.name}}</li>
+<ul>
+	<li ng-repeat="music in musiclist" action='playmusic("{{music.url}}","{{music.name}}")'>{{music.name}}</li>
 </ul>
 </div>

@@ -23,11 +23,22 @@ var gain=ac.createGain();
     ana.fftSize=size*2;
 //angular
 var app=angular.module('music',[]);
-app.controller('musicCtrl', function($scope,getlist){
-	$scope.buffer='';
-	$scope.offset=0;
-	$scope.name='';
-	$scope.url='';
+app.factory('getlist', ['$http', function ($http) {//get music list
+	return $http.get('getmusiclist.php');
+}])
+.factory('curinfo',function(){
+	return {
+		name:'',
+		url:'',
+		buffer:'',
+		offset:0
+	}
+})
+.controller('musicCtrl', function($scope,getlist,curinfo){
+	$scope.buffer=curinfo.buffer;
+	$scope.offset=curinfo.offset;
+	$scope.name=curinfo.name;
+	$scope.url=curinfo.url;
 	$scope.xhr=new XMLHttpRequest();
 	getlist.success(function(a){
 		$scope.musiclist=a;
@@ -81,13 +92,7 @@ app.controller('musicCtrl', function($scope,getlist){
 		ctx.font = "bold 20px MicrosoftYahei";
 		ctx.fillText("加载中，请稍候，单击改变颜色…………", 100, 100);
 	}
-	$scope.curmusic=function(a){
-		return {a:'asdf'};
-	}
 })
-.factory('getlist', ['$http', function ($http) {//get music list
-	return $http.get('getmusiclist.php');
-}])
 .directive('list',function(getlist){
 	return{
 		restrict:'E',
@@ -99,7 +104,9 @@ app.controller('musicCtrl', function($scope,getlist){
 		restrict: 'A',
 		link: function (scope,element,attr) {
 			element.bind('click',function(){
-				scope.$apply(attr.action)
+				scope.$apply(attr.action);
+				element.siblings().removeClass('selected');
+				element.addClass('selected');
 			})
 		}
 	};
@@ -112,15 +119,6 @@ app.controller('musicCtrl', function($scope,getlist){
 			scope.$watch('volumn',function(a){
 				gain.gain.value=a*a/10000;
 			})
-		}
-	}
-})
-.directive('detectactive',function(){
-	return{
-		restrict:'A',
-		link:function(s,e,a){
-			console.log(s.music.name)
-			var cur=s.$apply(a.detectactive);
 		}
 	}
 })
