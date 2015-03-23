@@ -13,14 +13,6 @@ canvas.onclick=function(){
 		lg.addColorStop(0.5,'rgb('+Math.floor(Math.random()*255)+','+Math.floor(Math.random()*255)+','+Math.floor(Math.random()*255)+')');
 		lg.addColorStop(1,'rgb('+Math.floor(Math.random()*255)+','+Math.floor(Math.random()*255)+','+Math.floor(Math.random()*255)+')');
 }
-window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
-var ac=new (window.AudioContext || window.webkitAudioContext);
-var source=ac.createBufferSource();
-var gain=ac.createGain();
-	gain.gain.value=0.25;
-    var ana=ac.createAnalyser();
-    var size=128
-    ana.fftSize=size*2;
 //angular
 var app=angular.module('music',[]);
 app.factory('getlist', ['$http', function ($http) {//get music list
@@ -28,10 +20,12 @@ app.factory('getlist', ['$http', function ($http) {//get music list
 }])
 .factory('curinfo',function(){
 	return {
+		status:'stop',
 		name:'',
 		url:'',
 		buffer:'',
-		offset:0
+		offset:0,
+		gain:0.25
 	}
 })
 .controller('musicCtrl', function($scope,getlist,curinfo){
@@ -46,33 +40,55 @@ app.factory('getlist', ['$http', function ($http) {//get music list
 	$scope.playmusic=function(a,b){
 		if($scope.url==a){return;}
 		//get info
-		$scope.canvasload();
-		$scope.name=b;
-		$scope.url=a;
-		$scope.xhr.open('GET','songs/'+a);
-		$scope.xhr.responseType = 'arraybuffer';
-		$scope.xhr.onload=function(){
-			ac.decodeAudioData($scope.xhr.response,function(buffer){
-			$scope.buffer=buffer;
-            $scope.play();
-           })
+		if(curinfo.status=='stop'){
+			curinfo.status='start';
+			$scope.newcontext();
+			$scope.canvasload();
+			$scope.name=b;
+			$scope.url=a;
+			$scope.xhr.open('GET','songs/'+a);
+			$scope.xhr.responseType = 'arraybuffer';
+			$scope.xhr.onload=function(){
+				$scope.ac.decodeAudioData($scope.xhr.response,function(buffer){
+				$scope.buffer=buffer;
+	            $scope.play();
+	           })
+			}
+			$scope.xhr.send();	
+		}else{
+			$scope.source.stop();
+			$scope.xhr.abort();
+			$scope.newcontext();
+			$scope.canvasload();
+			$scope.name=b;
+			$scope.url=a;
+			$scope.xhr.open('GET','songs/'+a);
+			$scope.xhr.responseType = 'arraybuffer';
+			$scope.xhr.onload=function(){
+				$scope.ac.decodeAudioData($scope.xhr.response,function(buffer){
+				$scope.buffer=buffer;
+				$scope.play();
+	           })
+			}
+			$scope.xhr.send();
 		}
-		$scope.xhr.send();
+		
 		
 	}
 	$scope.play=function(){
-		source.buffer=$scope.buffer;
-        source.connect(ana);
-       	ana.connect(gain);
-        gain.connect(ac.destination);
+		$scope.source.buffer=$scope.buffer;
+        $scope.source.connect($scope.ana);
+       	$scope.ana.connect($scope.gain);
+        $scope.gain.connect($scope.ac.destination);
        	$scope.analyse();
-       	source.start();
+       	$scope.source.start();
+       	
 	}
 	$scope.analyse=function(){
-		var arr=new Uint8Array(ana.frequencyBinCount);
+		var arr=new Uint8Array($scope.ana.frequencyBinCount);
         requestAnimationFrame(animate);
         function animate(){
-            ana.getByteFrequencyData(arr);
+            $scope.ana.getByteFrequencyData(arr);
             $scope.draw(arr);
             requestAnimationFrame(animate);
         }
@@ -80,9 +96,9 @@ app.factory('getlist', ['$http', function ($http) {//get music list
 	$scope.draw=function(arr){
 		ctx.clearRect(0, 0, 700, 400);
 		ctx.fillStyle = lg;
-		var w=700/size;
-		for(var i=0;i<size;i++){
-			var h=arr[i]/256*400*Math.sqrt(gain.gain.value);
+		var w=700/$scope.size;
+		for(var i=0;i<$scope.size;i++){
+			var h=arr[i]/256*400*Math.sqrt($scope.gain.gain.value);
 			ctx.fillRect(i*w, 420-h, w, h);
 		}
 	}
@@ -92,6 +108,21 @@ app.factory('getlist', ['$http', function ($http) {//get music list
 		ctx.font = "bold 20px MicrosoftYahei";
 		ctx.fillText("加载中，请稍候，单击改变颜色…………", 100, 100);
 	}
+	$scope.pause=function(){
+		$scope.source.stop();
+		curinfo.status='stop';
+	}
+	$scope.newcontext=function(){
+		$scope.ac=new (window.AudioContext || window.webkitAudioContext);
+		$scope.source=$scope.ac.createBufferSource();
+		$scope.gain=$scope.ac.createGain();
+		$scope.ana=$scope.ac.createAnalyser();
+		$scope.size=128
+		$scope.ana.fftSize=$scope.size*2;
+	}
+	$scope.$watch('volumnagent',function(a){
+		$scope.gain.gain.value=a*a/10000;
+	})
 })
 .directive('list',function(getlist){
 	return{
@@ -111,14 +142,14 @@ app.factory('getlist', ['$http', function ($http) {//get music list
 		}
 	};
 })
-.directive('status',function(){
+.directive('status',function(curinfo){
 	return{
 		restrict:'A',
-		templateUrl:'tpls/status.html',
-		link:function(scope,element,attr){
-			scope.$watch('volumn',function(a){
-				gain.gain.value=a*a/10000;
-			})
-		}
+		templateUrl:'tpls/status.html'
+	}
+})
+.filter('sqrt',function(){
+	return function(num){
+		return Math.sqrt(num);
 	}
 })

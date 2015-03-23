@@ -1,4 +1,9 @@
-<div class="name">{{name}}</div>
+<div class="name">
+{{name}}
+<button class="rect" ng-click="pause()">暂停</button>
+<button class="rect" ng-click="continue()">播放</button>
+<input type="range" min='0' max='100' style='width:500px;' title=''>
+</div>
 <div class="musicstatus">
-	音量<input type="range" min='0' max='100' value='50' ng-model='volumn'>
+	音量<input type="range" min='0' max='100' value='50' ng-model='volumnagent'>
 </div>
