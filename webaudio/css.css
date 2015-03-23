@@ -10,3 +10,5 @@ body{background: #ccc;font-family: 黑体;}
 .name{height: 100px;width: 1000px;font-weight: bold;font-size: 2em;}
 .musicstatus{height: 100px;width: 1000px;}
 .selected{background: #EEE9E9;border-radius: 10px;box-shadow: 0 0 3px 3px rgba(0,50,50,.5);font-weight: bold;}
+.search input{margin:0 auto;display: block;background: rgba(255,255,255,0.4);border-radius: 10px;width: 100px;text-align: center;}
+.search input:focus{width: 200px;}

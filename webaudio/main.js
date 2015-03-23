@@ -148,8 +148,3 @@ app.factory('getlist', ['$http', function ($http) {//get music list
 		templateUrl:'tpls/status.html'
 	}
 })
-.filter('sqrt',function(){
-	return function(num){
-		return Math.sqrt(num);
-	}
-})

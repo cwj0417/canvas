@@ -1,5 +1,6 @@
 <div class="list">
+<div class="search"><input type="text" ng-model='searchmusic' placeholder='查找'></div>
 <ul>
-	<li ng-repeat="music in musiclist" action='playmusic("{{music.url}}","{{music.name}}")'>{{music.name}}</li>
+	<li ng-repeat="music in musiclist|filter:searchmusic" action='playmusic("{{music.url}}","{{music.name}}")'>{{music.name}}</li>
 </ul>
 </div>
