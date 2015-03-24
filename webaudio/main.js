@@ -24,7 +24,6 @@ app.factory('getlist', ['$http', function ($http) {//get music list
 		name:'',
 		url:'',
 		buffer:'',
-		offset:0,
 		gain:0.25
 	}
 })
@@ -33,59 +32,68 @@ app.factory('getlist', ['$http', function ($http) {//get music list
 	$scope.offset=curinfo.offset;
 	$scope.name=curinfo.name;
 	$scope.url=curinfo.url;
+	$scope.playtime=0;
+	$scope.playhd=null;//counthandler
+	$scope.period=0;
+	$scope.isanimate=false;
+	$scope.isplaying=false;
+	$scope.ispause=false;
+	$scope.mode='loop';
 	$scope.xhr=new XMLHttpRequest();
 	getlist.success(function(a){
 		$scope.musiclist=a;
 	})
 	$scope.playmusic=function(a,b){
-		if($scope.url==a){return;}
+		if($scope.url==a){
+			if(curinfo.status=='start'){$scope.pause();}else{$scope.continue();}
+			return;
+		}
 		//get info
 		if(curinfo.status=='stop'){
 			curinfo.status='start';
-			$scope.newcontext();
-			$scope.canvasload();
-			$scope.name=b;
-			$scope.url=a;
-			$scope.xhr.open('GET','songs/'+a);
-			$scope.xhr.responseType = 'arraybuffer';
-			$scope.xhr.onload=function(){
-				$scope.ac.decodeAudioData($scope.xhr.response,function(buffer){
-				$scope.buffer=buffer;
-	            $scope.play();
-	           })
-			}
-			$scope.xhr.send();	
 		}else{
 			$scope.source.stop();
 			$scope.xhr.abort();
-			$scope.newcontext();
-			$scope.canvasload();
-			$scope.name=b;
-			$scope.url=a;
-			$scope.xhr.open('GET','songs/'+a);
-			$scope.xhr.responseType = 'arraybuffer';
-			$scope.xhr.onload=function(){
-				$scope.ac.decodeAudioData($scope.xhr.response,function(buffer){
-				$scope.buffer=buffer;
-				$scope.play();
-	           })
-			}
-			$scope.xhr.send();
 		}
+		$scope.newcontext();
+		$scope.canvasload();
+		$scope.name=b;
+		$scope.url=a;
+		$scope.xhr.open('GET','songs/'+a);
+		$scope.xhr.responseType = 'arraybuffer';
+		$scope.gain.gain.value=$scope.volumnagent*$scope.volumnagent/10000;
+		$scope.xhr.onload=function(){
+			$scope.ac.decodeAudioData($scope.xhr.response,function(buffer){
+			$scope.buffer=buffer;
+            $scope.play();
+           })
+		}
+		$scope.xhr.send();
 		
 		
 	}
 	$scope.play=function(){
+		var offset=arguments[0]?arguments[0]:0;
 		$scope.source.buffer=$scope.buffer;
         $scope.source.connect($scope.ana);
        	$scope.ana.connect($scope.gain);
         $scope.gain.connect($scope.ac.destination);
        	$scope.analyse();
-       	$scope.source.start();
+       	$scope.source.start(0,offset,$scope.source.buffer.duration-offset);
+       	$scope.period=$scope.source.buffer.duration;
+       	$scope.playtime=offset;
+       	$scope.isplaying=true;
+        $scope.playhd=setInterval(function(){
+        	$scope.$apply(function(){
+        		$scope.playtime++;
+        	})
+        },1000)
        	
 	}
 	$scope.analyse=function(){
 		var arr=new Uint8Array($scope.ana.frequencyBinCount);
+		if($scope.isanimate){return;}
+		$scope.isanimate=true;
         requestAnimationFrame(animate);
         function animate(){
             $scope.ana.getByteFrequencyData(arr);
@@ -111,6 +119,17 @@ app.factory('getlist', ['$http', function ($http) {//get music list
 	$scope.pause=function(){
 		$scope.source.stop();
 		curinfo.status='stop';
+		clearInterval($scope.playhd);
+		$scope.xhr.abort();
+		$scope.isplaying=false;
+		$scope.ispause=true;
+	}
+	$scope.continue=function(){
+		$scope.newcontext();
+		$scope.play($scope.playtime);
+		curinfo.status='start';
+		$scope.ispause=false;
+		$scope.isplaying=true;
 	}
 	$scope.newcontext=function(){
 		$scope.ac=new (window.AudioContext || window.webkitAudioContext);
@@ -119,6 +138,28 @@ app.factory('getlist', ['$http', function ($http) {//get music list
 		$scope.ana=$scope.ac.createAnalyser();
 		$scope.size=128
 		$scope.ana.fftSize=$scope.size*2;
+		$scope.source.onended=function(){
+			if($scope.playtime==Math.floor($scope.source.buffer.duration)){
+				switch($scope.mode) {
+					case 'loop':
+						$scope.newcontext();
+						$scope.playtime=0;
+						$scope.play($scope.playtime);
+						$scope.ispause=false;
+						$scope.isplaying=true;
+						break;
+					case 'order':
+						console.log('order')
+						break;
+					case 'random':
+						console.log('random')
+						break;
+				}
+			}
+		}
+	}
+	$scope.test=function(){
+		console.log($scope)
 	}
 	$scope.$watch('volumnagent',function(a){
 		$scope.gain.gain.value=a*a/10000;
@@ -146,5 +187,27 @@ app.factory('getlist', ['$http', function ($http) {//get music list
 	return{
 		restrict:'A',
 		templateUrl:'tpls/status.html'
+	}
+})
+.directive('processbar',function(curinfo){
+	return{
+		restrict:'AE',
+		template:"<input type='range' value='0' min='0' step='1' max='100'>",
+		link:function(s,e,a){
+			var bar=e[0].firstChild;
+			bar.style.width='500px';
+			s.$watch('playtime',function(a){
+				bar.value=a;
+				bar.title=a;
+			})
+			s.$watch('period',function(a){
+				bar.max=a;
+			})
+			bar.onchange=function(){
+				s.pause();
+				s.playtime=bar.value;
+				s.continue();
+			}
+		}
 	}
 })

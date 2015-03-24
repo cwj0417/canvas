@@ -1,0 +1,1 @@
+播放的时间：sourceNode.context.currentTime

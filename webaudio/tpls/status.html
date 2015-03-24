@@ -1,9 +1,15 @@
 <div class="name">
 {{name}}
-<button class="rect" ng-click="pause()">暂停</button>
-<button class="rect" ng-click="continue()">播放</button>
-<input type="range" min='0' max='100' style='width:500px;' title=''>
+<button class="rect" ng-click="pause()" ng-show="isplaying">暂停</button>
+<button class="rect" ng-click="continue()" ng-show="ispause">播放</button>
+<select ng-model='mode'>
+	<option value="loop">loop</option>
+	<option value="order">order</option>
+	<option value="random">random</option>
+</select>
+<!-- <button class="rect" ng-click="test()">test</button> -->
+<processbar></processbar>
 </div>
 <div class="musicstatus">
-	音量<input type="range" min='0' max='100' value='50' ng-model='volumnagent'>
+	音量<input type="range" min='0' max='100' value='100' ng-model='volumnagent'>
 </div>
