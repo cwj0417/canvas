@@ -148,10 +148,25 @@ app.factory('getlist', ['$http', function ($http) {//get music list
 						$scope.ispause=false;
 						$scope.isplaying=true;
 						break;
-					case 'order':
-						console.log('order')
-						break;
 					case 'random':
+						var random=$scope.musiclist[Math.floor(Math.random()*$scope.musiclist.length)];
+						$scope.xhr.abort();
+						$scope.newcontext();
+						$scope.canvasload();
+						$scope.name=random.name;
+						$scope.url=random.url;
+						$scope.xhr.open('GET','songs/'+random.url);
+						$scope.xhr.responseType = 'arraybuffer';
+						$scope.gain.gain.value=$scope.volumnagent*$scope.volumnagent/10000;
+						$scope.xhr.onload=function(){
+							$scope.ac.decodeAudioData($scope.xhr.response,function(buffer){
+							$scope.buffer=buffer;
+				            $scope.play();
+				           })
+						}
+						$scope.xhr.send();
+						break;
+					case 'order':
 						console.log('random')
 						break;
 				}
@@ -159,7 +174,7 @@ app.factory('getlist', ['$http', function ($http) {//get music list
 		}
 	}
 	$scope.test=function(){
-		console.log($scope)
+		console.log($scope.musiclist[Math.floor(Math.random()*$scope.musiclist.length)])
 	}
 	$scope.$watch('volumnagent',function(a){
 		$scope.gain.gain.value=a*a/10000;
